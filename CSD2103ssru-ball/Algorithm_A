@@ -1,0 +1,23 @@
+public static BoxStack firstAvailable(
+        List<BoxStack> stacks,
+        BoxStack sourceStack) {
+
+    // ตรวจสอบ Stack ตั้งแต่กองแรก
+    for (BoxStack stack : stacks) {
+
+        // นับจำนวนครั้งที่ตรวจสอบ Stack
+        stackCheckCount++;
+
+        // ต้องไม่ใช่ Stack ต้นทาง
+        // และต้องมีพื้นที่ว่าง
+        if (stack != sourceStack
+                && stack.remainingSpace() > 0) {
+
+            // พบกองแรกที่มีพื้นที่ว่าง
+            return stack;
+        }
+    }
+
+    // ไม่มี Stack ที่สามารถใช้งานได้
+    return null;
+}

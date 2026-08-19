@@ -1,0 +1,35 @@
+import java.util.ArrayList;
+import java.util.List;
+
+public class Main {
+    public static void main(String[] args) {
+        List<WarehouseStack> stacks = new ArrayList<>();
+
+        // สร้าง Stack ขนาดจุละ 5 กล่อง จำนวน 3 กอง
+        WarehouseStack stackA = new WarehouseStack("Stack A", 5);
+        WarehouseStack stackB = new WarehouseStack("Stack B", 5);
+        WarehouseStack stackC = new WarehouseStack("Stack C", 5);
+
+        // เติมข้อมูลกล่องจำลอง
+        stackA.push(new Box("BOX-101", "Electronics", 1)); // อยู่ล่างสุด (Target)
+        stackA.push(new Box("BOX-102", "Clothes", 2));
+        stackA.push(new Box("BOX-103", "Toys", 3));       // อยู่บนสุด
+
+        stackB.push(new Box("BOX-201", "Food", 1));
+        stackB.push(new Box("BOX-202", "Food", 1));
+        stackB.push(new Box("BOX-203", "Food", 1)); // เหลือ space = 2
+
+        stackC.push(new Box("BOX-301", "Books", 1)); // เหลือ space = 4
+
+        stacks.add(stackA);
+        stacks.add(stackB);
+        stacks.add(stackC);
+
+        System.out.println("=== ทดสอบ Algorithm B (Best Fit) ===");
+        boolean success = WarehouseManager.retrieveBoxAlgorithmB(stacks, 0, "BOX-101");
+
+        if (success) {
+            System.out.println("การย้ายกล่องเสร็จสมบูรณ์เรียบร้อย!");
+        }
+    }
+}

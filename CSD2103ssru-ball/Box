@@ -1,0 +1,24 @@
+import java.time.LocalDateTime;
+
+public class Box {
+    private String boxId;
+    private String category;
+    private LocalDateTime arrivalTime;
+    private int priority;
+
+    public Box(String boxId, String category, int priority) {
+        this.boxId = boxId;
+        this.category = category;
+        this.arrivalTime = LocalDateTime.now();
+        this.priority = priority;
+    }
+
+    public String getBoxId() { return boxId; }
+    public String getCategory() { return category; }
+    public int getPriority() { return priority; }
+
+    @Override
+    public String toString() {
+        return "Box[" + boxId + "]";
+    }
+}

@@ -1,0 +1,524 @@
+import java.util.ArrayList;
+import java.util.List;
+
+// =========================
+// Box
+// =========================
+class Box {
+    int boxID;
+    String category;
+    String arrivalTime;
+    int priority;
+
+    public Box(int boxID, String category, String arrivalTime, int priority) {
+        this.boxID = boxID;
+        this.category = category;
+        this.arrivalTime = arrivalTime;
+        this.priority = priority;
+    }
+
+    @Override
+    public String toString() {
+        return "Box" + boxID;
+    }
+}
+
+
+// =========================
+// Stack
+// =========================
+class BoxStack {
+    String name;
+    int capacity;
+    ArrayList<Box> boxes;
+
+    public BoxStack(String name, int capacity) {
+        this.name = name;
+        this.capacity = capacity;
+        this.boxes = new ArrayList<>();
+    }
+
+    // เหลือพื้นที่กี่ช่อง
+    public int remainingSpace() {
+        return capacity - boxes.size();
+    }
+
+    // Push
+    public boolean push(Box box) {
+        if (boxes.size() >= capacity) {
+            return false;
+        }
+
+        boxes.add(box);
+        return true;
+    }
+
+    // Pop
+    public Box pop() {
+        if (boxes.isEmpty()) {
+            return null;
+        }
+
+        return boxes.remove(boxes.size() - 1);
+    }
+
+    // ดูกล่องด้านบน
+    public Box peek() {
+        if (boxes.isEmpty()) {
+            return null;
+        }
+
+        return boxes.get(boxes.size() - 1);
+    }
+
+    public void display() {
+        System.out.print(name + " : ");
+
+        for (Box box : boxes) {
+            System.out.print(box + " ");
+        }
+
+        System.out.println(
+                "(เหลือ " + remainingSpace() + " ช่อง)"
+        );
+    }
+}
+
+
+// =========================
+// Main
+// =========================
+public class WarehouseStack {
+
+    static int stackCheckCount = 0;
+    static int movedCount = 0;
+
+
+    // ==========================================
+    // 1. ค้นหากล่องเป้าหมาย
+    // ==========================================
+    public static BoxStack findTarget(
+            List<BoxStack> stacks,
+            int targetID) {
+
+        for (BoxStack stack : stacks) {
+
+            for (int i = stack.boxes.size() - 1; i >= 0; i--) {
+
+                if (stack.boxes.get(i).boxID == targetID) {
+                    return stack;
+                }
+            }
+        }
+
+        return null;
+    }
+
+
+    // ==========================================
+    // 2. Algorithm A
+    // First Available Stack
+    // ==========================================
+    public static BoxStack firstAvailable(
+            List<BoxStack> stacks,
+            BoxStack sourceStack) {
+
+        for (BoxStack stack : stacks) {
+
+            stackCheckCount++;
+
+            // ห้ามย้ายกลับ Stack เดิมทันที
+            if (stack != sourceStack
+                    && stack.remainingSpace() > 0) {
+
+                return stack;
+            }
+        }
+
+        return null;
+    }
+
+
+    // ==========================================
+    // 3. Algorithm B
+    // Best Fit Stack
+    // ==========================================
+    public static BoxStack bestFit(
+            List<BoxStack> stacks,
+            BoxStack sourceStack) {
+
+        BoxStack bestStack = null;
+
+        int minimumSpace = Integer.MAX_VALUE;
+
+        for (BoxStack stack : stacks) {
+
+            stackCheckCount++;
+
+            if (stack != sourceStack
+                    && stack.remainingSpace() > 0) {
+
+                int spaceAfterMove =
+                        stack.remainingSpace() - 1;
+
+                if (spaceAfterMove < minimumSpace) {
+
+                    minimumSpace = spaceAfterMove;
+                    bestStack = stack;
+                }
+            }
+        }
+
+        return bestStack;
+    }
+
+
+    // ==========================================
+    // 4. คืนกล่องกลับ Stack เดิม
+    // ==========================================
+    public static void restoreBoxes(
+            ArrayList<Box> temporary,
+            BoxStack originalStack) {
+
+        while (!temporary.isEmpty()) {
+
+            Box box =
+                    temporary.remove(temporary.size() - 1);
+
+            originalStack.push(box);
+        }
+    }
+
+
+    // ==========================================
+    // 5. นำกล่อง Target ออก
+    // ==========================================
+    public static boolean removeTarget(
+            List<BoxStack> stacks,
+            int targetID,
+            String algorithm) {
+
+        stackCheckCount = 0;
+        movedCount = 0;
+
+        // ค้นหา Target
+        BoxStack sourceStack =
+                findTarget(stacks, targetID);
+
+        // ไม่พบ Target
+        if (sourceStack == null) {
+
+            System.out.println(
+                    "ไม่พบกล่อง Target : Box" + targetID
+            );
+
+            return false;
+        }
+
+        System.out.println(
+                "\nTarget Box" + targetID
+                + " อยู่ที่ " + sourceStack.name
+        );
+
+
+        // เก็บกล่องที่ย้ายชั่วคราว
+        ArrayList<Box> temporary =
+                new ArrayList<>();
+
+
+        // ======================================
+        // ย้ายกล่องที่อยู่เหนือ Target
+        // ======================================
+        while (sourceStack.peek() != null
+                && sourceStack.peek().boxID != targetID) {
+
+            Box box = sourceStack.pop();
+
+            BoxStack destination;
+
+
+            // เลือก Algorithm
+            if (algorithm.equals("FirstAvailable")) {
+
+                destination =
+                        firstAvailable(
+                                stacks,
+                                sourceStack
+                        );
+
+            } else {
+
+                destination =
+                        bestFit(
+                                stacks,
+                                sourceStack
+                        );
+            }
+
+
+            // ไม่มีพื้นที่
+            if (destination == null) {
+
+                System.out.println(
+                        "ไม่มีพื้นที่เพียงพอ!"
+                );
+
+                // คืนกล่องทั้งหมด
+                restoreBoxes(
+                        temporary,
+                        sourceStack
+                );
+
+                return false;
+            }
+
+
+            // ย้ายกล่อง
+            destination.push(box);
+
+            temporary.add(box);
+
+            movedCount++;
+
+            System.out.println(
+                    "ย้าย " + box
+                    + " จาก " + sourceStack.name
+                    + " -> " + destination.name
+            );
+        }
+
+
+        // ======================================
+        // นำ Target ออก
+        // ======================================
+        Box target = sourceStack.pop();
+
+        System.out.println(
+                "นำ Target " + target + " ออกสำเร็จ"
+        );
+
+
+        // ======================================
+        // คืนกล่องกลับ
+        // ======================================
+        restoreBoxes(
+                temporary,
+                sourceStack
+        );
+
+        System.out.println(
+                "คืนกล่องที่ย้ายกลับเรียบร้อย"
+        );
+
+        return true;
+    }
+
+
+    // ==========================================
+    // 6. สร้างข้อมูลเริ่มต้น
+    // ==========================================
+    public static List<BoxStack> createWarehouse() {
+
+        List<BoxStack> stacks =
+                new ArrayList<>();
+
+        BoxStack stackA =
+                new BoxStack("Stack A", 5);
+
+        BoxStack stackB =
+                new BoxStack("Stack B", 5);
+
+        BoxStack stackC =
+                new BoxStack("Stack C", 5);
+
+
+        // Stack A
+        stackA.push(
+                new Box(1, "Food",
+                        "08:00", 1)
+        );
+
+        stackA.push(
+                new Box(2, "Electronic",
+                        "08:10", 2)
+        );
+
+        stackA.push(
+                new Box(3, "Book",
+                        "08:20", 1)
+        );
+
+        stackA.push(
+                new Box(4, "Clothes",
+                        "08:30", 3)
+        );
+
+
+        // Stack B
+        stackB.push(
+                new Box(5, "Food",
+                        "09:00", 1)
+        );
+
+
+        // Stack C
+        stackC.push(
+                new Box(6, "Book",
+                        "09:10", 2)
+        );
+
+        stackC.push(
+                new Box(7, "Food",
+                        "09:20", 1)
+        );
+
+        stackC.push(
+                new Box(8, "Electronic",
+                        "09:30", 3)
+        );
+
+
+        stacks.add(stackA);
+        stacks.add(stackB);
+        stacks.add(stackC);
+
+        return stacks;
+    }
+
+
+    // ==========================================
+    // 7. Main
+    // ==========================================
+    public static void main(String[] args) {
+
+        int targetID = 2;
+
+
+        // ======================================
+        // Algorithm A
+        // ======================================
+        System.out.println(
+                "================================"
+        );
+
+        System.out.println(
+                "Algorithm A : First Available"
+        );
+
+        System.out.println(
+                "================================"
+        );
+
+        List<BoxStack> stacksA =
+                createWarehouse();
+
+        long startA =
+                System.nanoTime();
+
+        boolean resultA =
+                removeTarget(
+                        stacksA,
+                        targetID,
+                        "FirstAvailable"
+                );
+
+        long endA =
+                System.nanoTime();
+
+
+        long timeA =
+                endA - startA;
+
+
+        System.out.println(
+                "\nResult = " + resultA
+        );
+
+        System.out.println(
+                "Moved Boxes = " + movedCount
+        );
+
+        System.out.println(
+                "Stack Checks = "
+                + stackCheckCount
+        );
+
+        System.out.println(
+                "Execution Time = "
+                + timeA + " ns"
+        );
+
+
+        System.out.println(
+                "\nสถานะหลัง Algorithm A"
+        );
+
+        for (BoxStack stack : stacksA) {
+            stack.display();
+        }
+
+
+        // ======================================
+        // Algorithm B
+        // ======================================
+        System.out.println(
+                "\n\n================================"
+        );
+
+        System.out.println(
+                "Algorithm B : Best Fit"
+        );
+
+        System.out.println(
+                "================================"
+        );
+
+        List<BoxStack> stacksB =
+                createWarehouse();
+
+        long startB =
+                System.nanoTime();
+
+        boolean resultB =
+                removeTarget(
+                        stacksB,
+                        targetID,
+                        "BestFit"
+                );
+
+        long endB =
+                System.nanoTime();
+
+
+        long timeB =
+                endB - startB;
+
+
+        System.out.println(
+                "\nResult = " + resultB
+        );
+
+        System.out.println(
+                "Moved Boxes = " + movedCount
+        );
+
+        System.out.println(
+                "Stack Checks = "
+                + stackCheckCount
+        );
+
+        System.out.println(
+                "Execution Time = "
+                + timeB + " ns"
+        );
+
+
+        System.out.println(
+                "\nสถานะหลัง Algorithm B"
+        );
+
+        for (BoxStack stack : stacksB) {
+            stack.display();
+        }
+    }
+}

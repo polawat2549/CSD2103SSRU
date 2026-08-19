@@ -1,0 +1,50 @@
+import java.util.ArrayDeque;
+import java.util.Deque;
+
+public class WarehouseStack {
+    private String stackId;
+    private int capacity;
+    private Deque<Box> stack;
+
+    public WarehouseStack(String stackId, int capacity) {
+        this.stackId = stackId;
+        this.capacity = capacity;
+        this.stack = new ArrayDeque<>();
+    }
+
+    public boolean push(Box box) {
+        if (isFull()) return false;
+        stack.push(box);
+        return true;
+    }
+
+    public Box pop() {
+        return stack.pop();
+    }
+
+    public Box peek() {
+        return stack.peek();
+    }
+
+    public boolean isEmpty() {
+        return stack.isEmpty();
+    }
+
+    public boolean isFull() {
+        return stack.size() >= capacity;
+    }
+
+    public int getRemainingSpace() {
+        return capacity - stack.size();
+    }
+
+    public boolean contains(String targetBoxId) {
+        for (Box b : stack) {
+            if (b.getBoxId().equals(targetBoxId)) return true;
+        }
+        return false;
+    }
+
+    public String getStackId() { return stackId; }
+    public Deque<Box> getStack() { return stack; }
+}

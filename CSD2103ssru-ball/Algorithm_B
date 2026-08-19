@@ -1,0 +1,38 @@
+public static BoxStack bestFit(
+        List<BoxStack> stacks,
+        BoxStack sourceStack) {
+
+    BoxStack bestStack = null;
+
+    // กำหนดค่าเริ่มต้นให้มากที่สุด
+    int minimumSpace = Integer.MAX_VALUE;
+
+    // ตรวจสอบ Stack ทุกกอง
+    for (BoxStack stack : stacks) {
+
+        // นับจำนวนครั้งที่ตรวจสอบ Stack
+        stackCheckCount++;
+
+        // ไม่เลือก Stack ต้นทาง
+        // และต้องมีพื้นที่ว่าง
+        if (stack != sourceStack
+                && stack.remainingSpace() > 0) {
+
+            // คำนวณพื้นที่ว่างหลังจากนำกล่องไปวาง
+            int spaceAfterMove =
+                    stack.remainingSpace() - 1;
+
+            // ถ้าพื้นที่ที่เหลือน้อยกว่า
+            // Stack ที่เลือกไว้ก่อนหน้า
+            if (spaceAfterMove < minimumSpace) {
+
+                minimumSpace = spaceAfterMove;
+
+                bestStack = stack;
+            }
+        }
+    }
+
+    // คืน Stack ที่เหมาะสมที่สุด
+    return bestStack;
+}

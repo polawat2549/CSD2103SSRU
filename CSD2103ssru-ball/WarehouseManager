@@ -1,0 +1,121 @@
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.List;
+
+public class WarehouseManager {
+
+    // Algorithm A: First Available Stack (เลือก Stack แรกที่มีพื้นที่ว่าง)
+    public static boolean retrieveBoxAlgorithmA(List<WarehouseStack> stacks, int targetStackIndex, String targetBoxId) {
+        WarehouseStack targetStack = stacks.get(targetStackIndex);
+        if (!targetStack.contains(targetBoxId)) return false;
+
+        Deque<Box> movedBoxes = new ArrayDeque<>();
+        
+        // 1. Pop กล่องที่อยู่ขวางเป้าหมายออก
+        while (!targetStack.isEmpty() && !targetStack.peek().getBoxId().equals(targetBoxId)) {
+            Box topBox = targetStack.pop();
+            WarehouseStack destStack = findFirstAvailable(stacks, targetStackIndex);
+
+            if (destStack == null) {
+                System.out.println("Error: ไม่มีพื้นที่ว่างใน Stack อื่น!");
+                // Rollback ข้อมูลกลับคืน
+                targetStack.push(topBox);
+                while (!movedBoxes.isEmpty()) targetStack.push(movedBoxes.pop());
+                return false;
+            }
+
+            destStack.push(topBox);
+            movedBoxes.push(topBox); // บันทึกกล่องที่ย้ายไว้เพื่อนำกลับ
+        }
+
+        // 2. นำกล่องเป้าหมายออก
+        Box targetBox = targetStack.pop();
+        System.out.println("นำกล่องเป้าหมายออกสำเร็จ: " + targetBox);
+
+        // 3. ย้ายกล่องที่ขวางกลับคืน Stack เดิมในลำดับเดิม
+        while (!movedBoxes.isEmpty()) {
+            Box boxToReturn = movedBoxes.pop();
+            // ค้นหาว่าปัจจุบันกล่องนี้ไปอยู่ที่ Stack ไหนเพื่อ Pop ออกมาคืน
+            for (WarehouseStack s : stacks) {
+                if (!s.isEmpty() && s.peek().equals(boxToReturn)) {
+                    s.pop();
+                    break;
+                }
+            }
+            targetStack.push(boxToReturn);
+        }
+
+        return true;
+    }
+
+    // Algorithm B: Best Fit Stack (เลือก Stack ที่เหลือพื้นที่น้อยที่สุดหลังวาง)
+    public static boolean retrieveBoxAlgorithmB(List<WarehouseStack> stacks, int targetStackIndex, String targetBoxId) {
+        WarehouseStack targetStack = stacks.get(targetStackIndex);
+        if (!targetStack.contains(targetBoxId)) return false;
+
+        Deque<Box> movedBoxes = new ArrayDeque<>();
+
+        // 1. Pop กล่องที่อยู่ขวางเป้าหมายออก
+        while (!targetStack.isEmpty() && !targetStack.peek().getBoxId().equals(targetBoxId)) {
+            Box topBox = targetStack.pop();
+            WarehouseStack destStack = findBestFit(stacks, targetStackIndex);
+
+            if (destStack == null) {
+                System.out.println("Error: ไม่มีพื้นที่ว่างใน Stack อื่น!");
+                targetStack.push(topBox);
+                while (!movedBoxes.isEmpty()) targetStack.push(movedBoxes.pop());
+                return false;
+            }
+
+            destStack.push(topBox);
+            movedBoxes.push(topBox);
+        }
+
+        // 2. นำกล่องเป้าหมายออก
+        Box targetBox = targetStack.pop();
+        System.out.println("นำกล่องเป้าหมายออกสำเร็จ: " + targetBox);
+
+        // 3. ย้ายกล่องที่ขวางกลับคืน Stack เดิม
+        while (!movedBoxes.isEmpty()) {
+            Box boxToReturn = movedBoxes.pop();
+            for (WarehouseStack s : stacks) {
+                if (!s.isEmpty() && s.peek().equals(boxToReturn)) {
+                    s.pop();
+                    break;
+                }
+            }
+            targetStack.push(boxToReturn);
+        }
+
+        return true;
+    }
+
+    // Helper: หา Stack แรกที่มีพื้นที่ว่าง
+    private static WarehouseStack findFirstAvailable(List<WarehouseStack> stacks, int excludeIndex) {
+        for (int i = 0; i < stacks.size(); i++) {
+            if (i == excludeIndex) continue;
+            if (!stacks.get(i).isFull()) return stacks.get(i);
+        }
+        return null;
+    }
+
+    // Helper: หา Stack ที่เหลือพื้นที่ว่างน้อยที่สุด (Best Fit)
+    private static WarehouseStack findBestFit(List<WarehouseStack> stacks, int excludeIndex) {
+        WarehouseStack best = null;
+        int minRemainingSpace = Integer.MAX_VALUE;
+
+        for (int i = 0; i < stacks.size(); i++) {
+            if (i == excludeIndex) continue;
+            WarehouseStack current = stacks.get(i);
+            
+            if (!current.isFull()) {
+                int remaining = current.getRemainingSpace();
+                if (remaining < minRemainingSpace) {
+                    minRemainingSpace = remaining;
+                    best = current;
+                }
+            }
+        }
+        return best;
+    }
+}
